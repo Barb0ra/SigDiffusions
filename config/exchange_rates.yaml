@@ -1,0 +1,38 @@
+seed: 5678
+
+logging_folders:
+  real_paths: ./data/real_paths/
+  real_sigs: ./data/real_sigs/
+  generated_sigs: ./data/generated_sigs/
+  generated_paths: ./data/generated_paths/
+  model_checkpoints: ./model_checkpoints/
+
+dataset:
+  data_path: ./data/exchange_rates.npy
+  preprocessing_fn: data_loading_utils.load_exchange_rates_data
+  seq_len: 1000
+  dim: 8
+  scaler: minmax
+  shuffle: True
+  sig_depth: 4
+  by_channel: True
+  mirror_augmentation: False
+  test_set_size: 1000
+
+model:
+  hidden_size: 64
+  hidden_size_multiplier: 4
+  num_layers: 4
+  num_heads: 4
+
+training:
+  num_epochs: 1200
+  batch_size: 128
+  print_every: 300
+  lr: 0.001
+
+sampling:
+  num_steps: 128
+  sample_size: 1000
+  sample_batch_size: 500 # reduce if runs out of memory
+

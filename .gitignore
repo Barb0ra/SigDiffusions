@@ -1,0 +1,38 @@
+# Compiled files
+*.o
+*.out
+
+# Dependencies
+/node_modules
+/.venv
+
+# Logs and temporary files
+/log
+/tmp
+
+# IDE and editor specific files
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Sensitive or private information
+config.ini
+secrets.txt
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Data files
+/data
+/model_checkpoints
+
+*.png
+*.pdf
