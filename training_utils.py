@@ -90,7 +90,6 @@ def train_loop(
     opt_state = opt.init(eqx.filter(model, eqx.is_inexact_array))
     total_value = 0
     total_size = 0
-    best_test_loss = float("inf")
     with tqdm(total=num_steps, desc="Training") as pbar:
         for step, data in zip(
             range(num_steps), dataloader(data, batch_size, key=loader_key)

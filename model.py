@@ -8,6 +8,7 @@ import jax.random as jr
 import numpy as np
 from jaxtyping import Array, Float, Int  # https://github.com/google/jaxtyping
 from typing import List, Optional
+from abc import ABC, abstractmethod
 
 
 def upsample_1d(y, factor=2):
@@ -122,6 +123,69 @@ class AttentionBlock(eqx.Module):
         return x + attention_output
 
 
+class LinearAttentionBlock(eqx.Module):
+    """A linear attention block (see https://arxiv.org/abs/2006.16236)."""
+
+    layernorm: eqx.Module
+    kernel_fn: callable
+    num_heads: int
+    W_q: eqx.nn.Linear
+    W_k: eqx.nn.Linear
+    W_v: eqx.nn.Linear
+
+    def __init__(self, hidden_size, num_heads, key, kernel_fn=None):
+        self.num_heads = num_heads
+        self.kernel_fn = kernel_fn or (lambda x: jax.nn.relu(x))
+        head_size = hidden_size // num_heads
+        assert (
+            hidden_size % num_heads == 0
+        ), "hidden_size must be divisible by num_heads"
+
+        keys = jax.random.split(key, 3)
+        self.W_q = eqx.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, key=keys[0]
+        )
+        self.W_k = eqx.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, key=keys[1]
+        )
+        self.W_v = eqx.nn.Linear(
+            in_features=hidden_size, out_features=hidden_size, key=keys[2]
+        )
+
+        self.layernorm = AdaLayerNorm(hidden_size, keys[-1])
+
+    def __call__(
+        self,
+        x: Float[Array, "seq_len hidden_size"],
+        t: Float,
+        key: Optional[jax.random.PRNGKey] = None,
+    ) -> Float[Array, "seq_len hidden_size"]:
+
+        normed_input = self.layernorm(x, t)
+
+        vmap_apply_kernel = lambda w: jax.vmap(lambda z: self.kernel_fn(w(z)))(
+            normed_input
+        )
+
+        # Apply projections for Q, K, and V
+        Q = vmap_apply_kernel(self.W_q).reshape(
+            normed_input.shape[0], self.num_heads, -1
+        )
+        K = vmap_apply_kernel(self.W_k).reshape(
+            normed_input.shape[0], self.num_heads, -1
+        )
+        V = jax.vmap(lambda z: self.W_v(z))(normed_input).reshape(
+            normed_input.shape[0], self.num_heads, -1
+        )
+
+        KV = jnp.einsum("lhd,mhd->hld", K, V)
+        Z = 1 / jnp.maximum(jnp.einsum("lhd,mhd->hl", Q, K), 1e-5)
+        Z = Z.T[:, :, None]
+        out = jnp.einsum("lhd,hld->lhd", Q, KV) * Z
+        out = out.reshape(-1, x.shape[-1])
+        return x + out
+
+
 class FeedForwardBlock(eqx.Module):
     """A single transformer feed forward block."""
 
@@ -158,10 +222,20 @@ class FeedForwardBlock(eqx.Module):
         return x + output
 
 
+class AbstractAttentionBlock(eqx.Module, ABC):
+    """Abstract base class for attention blocks."""
+
+    @abstractmethod
+    def __call__(
+        self, inputs, t: Float, key: Optional[jax.random.PRNGKey] = None
+    ) -> Float[Array, "seq_len hidden_size"]:
+        pass
+
+
 class TransformerLayer(eqx.Module):
     """A single transformer layer."""
 
-    attention_block: AttentionBlock
+    attention_block: AbstractAttentionBlock
     ff_block: FeedForwardBlock
 
     def __init__(
@@ -169,15 +243,24 @@ class TransformerLayer(eqx.Module):
         hidden_size: int,
         intermediate_size: int,
         num_heads: int,
+        by_channel: bool,
         key: jax.random.PRNGKey,
     ):
         attention_key, ff_key = jax.random.split(key)
 
-        self.attention_block = AttentionBlock(
-            hidden_size=hidden_size,
-            num_heads=num_heads,
-            key=attention_key,
-        )
+        if by_channel:
+            self.attention_block = AttentionBlock(
+                hidden_size=hidden_size,
+                num_heads=num_heads,
+                key=attention_key,
+            )
+        else:
+            self.attention_block = LinearAttentionBlock(
+                hidden_size=hidden_size,
+                num_heads=num_heads,
+                kernel_fn=None,
+                key=attention_key,
+            )
         self.ff_block = FeedForwardBlock(
             hidden_size=hidden_size,
             intermediate_size=intermediate_size,
@@ -249,6 +332,7 @@ class Transformer(eqx.Module):
                     hidden_size=hidden_size,
                     intermediate_size=intermediate_size,
                     num_heads=num_heads,
+                    by_channel=by_channel,
                     key=layer_key,
                 )
             )

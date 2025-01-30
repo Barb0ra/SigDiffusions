@@ -93,7 +93,7 @@ Here is a guide to setting specific fields in the `./config/<dataset_name>.yaml`
 - `scaler`: Feature scaler. Options: `minmax` (0 to 1), `None`. For new datasets, start with `minmax`.
 - `shuffle`: Whether to shuffle the data. Make sure this is `True` if not already shuffled.
 - `sig_depth`: Signature truncation depth. For new datasets, start with 4. Reasonable values are in the range 2 to 6. Paths with high-frequency components will require higher truncation levels to fully capture the shape.
-- `by_channel`: Whether to compute signatures by channel. Only `True` is currently supported.
+- `by_channel`: Whether to compute signatures by channel. `True` is the recommended option. If `False`, linear attention will be used instead of full attention.
 - `mirror_augmentation`: Whether to use the mirror augmentation. Start with `False`.
 - `test_set_size`: Number of time series that will be held out during training. We use this set as real data for computing metrics in `evaluation.ipynb`.
 

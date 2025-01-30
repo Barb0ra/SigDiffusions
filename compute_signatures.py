@@ -122,6 +122,9 @@ def compute_signatures(config, name):
 
     real_path_folder = config["logging_folders"]["real_paths"]
     real_sig_folder = config["logging_folders"]["real_sigs"]
+    seed = config["seed"]
+
+    np.random.seed(seed)
 
     data = load_and_save_data(
         name, data_path, preprocessing_fn, seq_len, dim, shuffle, real_path_folder
@@ -129,6 +132,7 @@ def compute_signatures(config, name):
     if scaler == "minmax":
         data, data_min, data_max = minmax_scale_features(data)
 
+    print(f"Computing log-signatures for {name}...")
     logsigs = take_log_signatures(
         data, sig_depth, by_channel, mirror_augmentation, len(data), seq_len, dim
     )

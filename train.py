@@ -58,6 +58,7 @@ def train(config, name, logsigs=None):
 
     key = jr.PRNGKey(seed)
     key, model_key = jr.split(key)
+    np.random.seed(seed)
 
     train_data, test_data, data_mean, data_std = preprocess_for_training(
         logsigs, test_set_size
