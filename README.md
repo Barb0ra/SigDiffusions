@@ -2,6 +2,12 @@
 
 This repository contains code for the paper [SigDiffusions: Score-Based Diffusion Models for Long Time Series via Log-Signature Embeddings](https://arxiv.org/abs/2406.10354).
 
+**Overview diagram of the SigDiffusions pipeline for generating multivariate time series:**
+
+![SigDiffusions Diagram](SigDiffusions_diagram.png)
+
+The signatures of a time series dataset are points distributed in a non-Euclidean space (Lie group). Converting to log-signatures maps them to a Euclidean space (Lie algebra) where standard diffusion models operate. Calculating the log-signature embedding and its inverse (blue box) are fully deterministic operations, which greatly simplifies the learning task. The log-signatures serve as inputs to a score-based diffusion model (orange box). Step 6 is enabled by our newly derived closed-form inversion formulae.
+
 ## Set Up Instructions
 
 1. **Set Up Environment**:
