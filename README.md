@@ -1,6 +1,6 @@
-# SigDiffusions: Score-Based Diffusion Models for Long Time Series via Log-Signature Embeddings
+# SigDiffusions: Score-Based Diffusion Models for Time Series via Log-Signature Embeddings
 
-This repository contains code for the paper [SigDiffusions: Score-Based Diffusion Models for Long Time Series via Log-Signature Embeddings](https://arxiv.org/abs/2406.10354).
+This repository contains code for the paper [SigDiffusions: Score-Based Diffusion Models for Time Series via Log-Signature Embeddings](https://openreview.net/forum?id=Y8KK9kjgIK).
 
 **Overview diagram of the SigDiffusions pipeline for generating multivariate time series:**
 
@@ -104,6 +104,20 @@ Here is a guide to setting specific fields in the `./config/<dataset_name>.yaml`
 - `test_set_size`: Number of time series that will be held out during training. We use this set as real data for computing metrics in `evaluation.ipynb`.
 
 Keep the model, training, and sampling configuration as proposed, or adjust according to standard practices.
+
+## Citation
+
+If you find this repo useful, please cite our paper via
+
+```bibtex
+@inproceedings{barancikova2025sigdiffusions,
+   title={SigDiffusions: Score-Based Diffusion Models for Time Series via Log-Signature Embeddings},
+   author={Barbora Barancikova and Zhuoyue Huang and Cristopher Salvi},
+   booktitle={The Thirteenth International Conference on Learning Representations},
+   year={2025},
+   url={https://openreview.net/forum?id=Y8KK9kjgIK}
+}
+```
 
 ## Acknowledgements
 
